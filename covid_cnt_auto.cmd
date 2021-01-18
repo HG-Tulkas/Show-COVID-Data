@@ -1,8 +1,8 @@
 cls
 echo COVID_CNT
 
-call  C:\Users\hauke\anaconda3\Scripts\activate.bat C:\Users\hauke\anaconda3
+call  C:\ProgramData\Miniconda3\Scripts\activate.bat C:\ProgramData\Miniconda3
 
-py -3.7 COVID_19_DAN.py
+py -3.8-64 COVID_19_DAN.py
 
-timeout /T 5
+timeout /T 10

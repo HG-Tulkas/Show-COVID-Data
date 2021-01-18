@@ -1,3 +1,4 @@
+#%% Header
 import urllib.request
 from pathlib import Path
 
@@ -266,7 +267,7 @@ if __name__ == "__main__":
         covid.do_it()
     
     
-    #%% Plot Inzdenz velauf
+    #%% Plot Inzdenz Verlauf
     
     ###############################################################################
     # Erstelle list mit der Inzidenz über alle Wochen
@@ -287,13 +288,13 @@ if __name__ == "__main__":
             if int(line['id']) in id_filter :
                 try:
                     d = [int(x) for x in line["Meldedatum"].split('.')]
-                    datum = dt.date(d[2], d[1], d[0])
+                    datum = dt.datetime(d[2], d[1], d[0])
                     data = line
                     verlauf_dict[line["id"]].update({datum : data})
                 except KeyError:
                     verlauf_dict[line["id"]] = {datum : data}
     
-    
+
     
     
     dan_verlauf = verlauf_dict[str(id_dan)]
@@ -303,24 +304,44 @@ if __name__ == "__main__":
         # print(keys)
         
     from bokeh.plotting import figure, output_file, show
+    from bokeh.models import BoxAnnotation
     
     # output to static HTML file
     output_file("COVID_INZIDENZ.html")
+    
+    low_box = BoxAnnotation(top=35, fill_alpha=0.1, fill_color='green')
+    mid_box = BoxAnnotation(bottom=35, top=50, fill_alpha=0.1, fill_color='yellow')
+    high_box = BoxAnnotation(bottom=50, top=100, fill_alpha=0.1, fill_color='red')
+    ver_high_box = BoxAnnotation(bottom=100, fill_alpha=0.1, fill_color='purple')
     
     
     x = list([i   for i, val in enumerate(sorted(dan_verlauf))])
     key = list([val   for i, val in enumerate(sorted(dan_verlauf))])
     y_dan = list([float(dan_verlauf[i]["7-Tagesinzidenz pro 100.000 Einwohner"]) for i in key])
     y_lg = list([float(lg_verlauf[i]["7-Tagesinzidenz pro 100.000 Einwohner"]) for i in key])
-    x = key
+    y_faelle_lg = list([float(lg_verlauf[i]["bestätigte Fälle"]) for i in key])
+    y_faelle_dan = list([float(dan_verlauf[i]["bestätigte Fälle"]) for i in key])
+
     # create a new plot with a title and axis labels
-    p = figure(plot_width=800, plot_height=400, title="COVID_INZIDENZ", x_axis_label='x', y_axis_label='y', x_axis_type='datetime', y_range= (0, int(max(y_dan+y_lg))+10))
+    p = figure(plot_width=1500, plot_height=700, title="COVID_INZIDENZ",x_axis_type='datetime', x_axis_label='x', y_axis_label='y', y_range= (0, int(max(y_dan+y_lg))+10))
     
     
-    
+
     # add a line renderer with legend and line thickness
-    p.step(x, y_dan, legend_label="DAN", line_width=2, color='green')
-    p.step(x, y_lg, legend_label="LG", line_width=2,color='red')
+    p.step(x=key, y=y_dan, legend_label="DAN Inzidenz", line_width=2, color='green')
+    p.step(x=key, y=y_lg, legend_label="LG Inzidenz",  line_width=2, color='red')
+    p.vbar(x=key, top=y_faelle_lg, bottom=0, width=0.5, legend_label="LG new cases", color='yellow')
+    p.vbar(x=key, top=y_faelle_dan, bottom=0, width=0.5, legend_label="DAN new cases", color='orange')
+    
+
+    p.add_layout(low_box)
+    p.add_layout(mid_box)
+    p.add_layout(high_box)
+    p.add_layout(ver_high_box)
+    
+    # x_2 = [{'days':1},{'days':2},{'days':3}]
+    # y_2 = [1,2,3]    
+    # p.step(x=x_2, y=y_2)
     p.legend.location  = 'top_left'
     
     
